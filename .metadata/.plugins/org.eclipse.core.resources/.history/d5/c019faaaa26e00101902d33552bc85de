@@ -1,0 +1,8 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!-- 컬러값 세팅 -->
+<%
+	String bodybac_c="#e0ffff";
+	String back_c="#8fbc8f";
+	String title_c="5f0ea0"
+%>

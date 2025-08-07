@@ -1,0 +1,9 @@
+package com.memberone;
+
+// 우편번호를 데이터베이스에서 가져옴
+
+public class ZipCodeVo {
+
+	private 
+	
+}

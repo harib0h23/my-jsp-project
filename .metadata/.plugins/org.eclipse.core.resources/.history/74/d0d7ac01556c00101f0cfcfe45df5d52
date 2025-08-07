@@ -1,0 +1,71 @@
+package com.memberone;
+//데이터베이스 연동
+
+import java.sql.*;
+import java.util.*;
+
+import javax.sql.*;
+import javax.naming.*;
+
+public class StudentDAO {
+	
+	private Connection getConnection() {  // 메소드를 만듬
+		Connection con = null;
+		
+		try {
+			
+			Context initContext = new InitialContext();
+			Context envContext  = (Context)initContext.lookup("java:/comp/env");
+			DataSource ds = (DataSource)envContext.lookup("jdbc/myoracle");
+			con = ds.getConnection();
+			
+		} catch (Exception e) {
+			System.out.println("Connection 생성 실패");
+		}
+		return con;
+	}
+	
+	// 아이디 중복 검사 메소드 구현
+	public boolean idCheck(String id) {  // 데이터베이스에서 가져온 데이터와 비교
+		boolean result = true;
+		Connection con = null;
+		PreparedStatement pstmt = null; // 아이디값을 모르므로 동적으로 가져옴
+		ResultSet rs = null;
+		
+		try { //디비연결
+			con = getConnection();  // 위 메소드 호출로 디비가 연결이 됨
+			String sql1 = "select * from student where id=?";
+			pstmt = con.prepareStatement(sql1);
+			pstmt.setString(1, id);
+			rs = pstmt.executeQuery();
+			if(!rs.next()) result = false;			
+		}catch(SQLException s) {
+			s.printStackTrace();
+		}finally {
+			try {
+				if(rs!=null)rs.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+			try {
+				if(pstmt!=null)pstmt.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+			try {
+				if(con	!=null)con.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+		}
+		return result;
+		
+	} // end idCheck
+	
+	// 우편번호를 데이터베이스에서 검색해서 컬렉션에 저장해서 리턴해주는 메소드 구현
+	
+	public Vector<ZipCodeVo> zipcodeRead(String dong){
+		
+	}
+
+}

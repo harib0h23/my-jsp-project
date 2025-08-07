@@ -1,0 +1,23 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+ <%@ page import="com.memberone.*"%>
+ <% request.setCharacterEncoding("utf-8"); %>
+ <jsp:useBean id="dao" class="com.memberone.StudentDAO"/>
+ <jsp:useBean id="vo" class=com.memberone.StudentVO">
+ 	<jsp:setProperty name="vo" property="*"/>
+ </jsp:useBean>
+ 
+ <%
+ 	String loginID = session.getAttribute("loginID")
+ %>
+ 
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title></title>
+</head>
+<body>
+
+</body>
+</html>
