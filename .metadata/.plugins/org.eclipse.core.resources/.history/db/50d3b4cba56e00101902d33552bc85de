@@ -1,7 +1,0 @@
-function writeSave(){
-	if(document.writeForm.write.value==""){  /*null이면*/
-		alert("작성자를 입력해 주세요.")
-		document.writeForm.write.focus();
-		return false;
-	}
-}

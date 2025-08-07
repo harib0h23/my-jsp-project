@@ -1,9 +1,0 @@
-package com.memberone;
-
-// 우편번호를 데이터베이스에서 가져와 동 검색결과를 보여줌
-
-public class ZipCodeVo {
-
-	private 
-	
-}
