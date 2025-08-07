@@ -2,9 +2,9 @@
     pageEncoding="UTF-8"%>
 <!-- 컬러값 미리 세팅 -->
 <%
-String bodyback_c = "#e0ffff";
+String bodyback_c = "#FFF0F5";
 String back_c = "#8fbc8f";
 String title_c = "5f9ea0";
-String value_c = "#b0e0e6";
+String value_c = "#FFB3CB";
 String bar = "#778899";
 %>

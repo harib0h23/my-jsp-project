@@ -153,7 +153,7 @@ public class BoardDAO {
 	
 	/*  데이터베이스에 있는 전체 글을 가져다가 리스트에 저장 
 	 */
-	public List<BoardVO> getArticles(){
+	public List<BoardVO> getArticles(int start, int end){
 		
 		Connection con = null;
 		PreparedStatement pstmt = null;
@@ -162,12 +162,20 @@ public class BoardDAO {
 		
 		try {
 			con = ConnUtil.getConnection();
-			String sql = "select * from board order by num desc";
+			
+			//String sql = "select * from board order by num desc"; 페이지나누기전쿼리문
+			String sql = "select * from (select rownum rnum, num, writer, email, "
+					+ "subject, pass, regdate, readcount, ref, step, depth, content, "
+					+ "ip from (select * from board order by ref desc, step asc)) "
+					+ "where rnum >=? and rnum <=?";	//바인딩으로 시작과 끝의미
+			
 			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, start);
+			pstmt.setInt(2, end);			
 			rs = pstmt.executeQuery();
 			
 			if(rs.next()) { //결과가 있다면
-				articleList = new ArrayList<BoardVO>();
+				articleList = new ArrayList<BoardVO>(end - start + 1);
 				do {
 					BoardVO article = new BoardVO();
 					article.setNum(rs.getInt("num"));

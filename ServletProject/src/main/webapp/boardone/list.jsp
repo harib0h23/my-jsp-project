@@ -8,10 +8,20 @@
 <%@ include file="view/color.jsp" %>
  
  <%!
+ 	int pageSize = 5;
  	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
  %>
  
  <%
+ 	
+ 	String pageNum = request.getParameter("pageNum");
+ 	if(pageNum==null){
+ 		pageNum="1";  //문자열
+ 	}
+ 	
+ 	int currentPage = Integer.parseInt(pageNum);//문자열 인트형으로
+ 	int startRow = (currentPage-1)*pageSize+1;  //시작행
+ 	int endRow = currentPage*pageSize; //끝행
  
  	int count=0;
  	int number = 0;
@@ -23,10 +33,14 @@
  	count = dbPro.getArticleCount();
  	
  	if(count > 0){//글이 있을 때
- 		articleList = dbPro.getArticles(); //글을 가져다가 리스트에 저장한다
+ 		//articleList = dbPro.getArticles();
+ 		articleList = dbPro.getArticles(startRow, endRow); //글을 가져다가 리스트에 저장한다
  	}
- 	number = count; 	//브라우저에 number출력		
- %>
+ 	//number = count; 	//브라우저에 number출력		
+	number = count - (currentPage-1)*pageSize;
+ 	
+ 	
+ 	%>
  
 <!DOCTYPE html>
 <html>
@@ -73,7 +87,19 @@ if(count==0){  //글이 없을때
 	<tr height="30">
 		<td align="center" width="50"><%=number-- %></td>
 		<td width="250">  <!-- 제목을 눌렀을 때 글 상태보기 -->
-			<a href="content.jsp?num=<%=article.getNum()%>&pageNum=1">
+			<% 
+				int wid=0;
+				if(article.getDepth()>0){
+					wid=5*(article.getDepth());
+				
+			%>
+			<!-- 이미지불러오기 -->
+			<img src="img/level.gif" width="<%=wid%>" height="16">
+			<img src="img/re.gif">
+			<%}else{ %>
+			<img src="img/level.gif" width="<%=wid%>" height="16">
+			<%} %>
+			<a href="content.jsp?num=<%=article.getNum()%>&pageNum=<%=currentPage%>">
 				<%=article.getSubject() %>
 			</a>
 			<% if(article.getReadcount() >= 5){ %>
@@ -99,6 +125,51 @@ if(count==0){  //글이 없을때
 </table>
 
 <%} %>
+
+<%
+	if(count>0){ //있을때
+		int pageBlock = 5;
+		int imsi = count % pageSize == 0 ? 0 : 1;
+		int pageCount = count / pageSize + imsi;
+		
+		int startPage =(int)((currentPage-1)/pageBlock)*pageBlock+1;
+		//시작페이지 구하는 공식
+		//끝 페이지		
+		int endPage = startPage + pageBlock -1;
+		
+		if(startPage > pageBlock){
+	%>		
+	
+	<a href="list.jsp?pageNum=<%=startPage-pageBlock%>">[이전]</a>
+	
+	<%
+		} //end if문
+		for(int i = startPage ; i <= endPage && i <= pageCount ; i++){
+	%>
+	<a href="list.jsp?pageNum=<%=i%>">[<%=i %>]</a>		
+					
+	<%
+		} //end for문		
+	if(endPage < pageCount){		
+	%>	
+	<a href="list.jsp?pageNum=<%=startPage+pageBlock%>">[다음]</a>	
+
+<%
+	}	//end if문
+		
+	}
+
+
+
+%>			
+
+
+
+
+
+
+
+
 </div>
 
 </body>
