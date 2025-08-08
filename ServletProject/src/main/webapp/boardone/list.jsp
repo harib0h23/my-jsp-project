@@ -10,37 +10,59 @@
  <%!
  	int pageSize = 5;
  	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+ 	
  %>
  
  <%
- 	
- 	String pageNum = request.getParameter("pageNum");
- 	if(pageNum==null){
- 		pageNum="1";  //문자열
- 	}
- 	
- 	int currentPage = Integer.parseInt(pageNum);//문자열 인트형으로
- 	int startRow = (currentPage-1)*pageSize+1;  //시작행
- 	int endRow = currentPage*pageSize; //끝행
  
- 	int count=0;
- 	int number = 0;
- 	List<BoardVO> articleList = null;
- 	
- 	BoardDAO dbPro = BoardDAO.getInstance();
- 	
- 	// 전체글 가져오기
- 	count = dbPro.getArticleCount();
- 	
- 	if(count > 0){//글이 있을 때
- 		//articleList = dbPro.getArticles();
- 		articleList = dbPro.getArticles(startRow, endRow); //글을 가져다가 리스트에 저장한다
- 	}
- 	//number = count; 	//브라우저에 number출력		
-	number = count - (currentPage-1)*pageSize;
- 	
- 	
- 	%>
+  String searchWhat = request.getParameter("searchWhat"); //어디서 검색?
+  String searchText = request.getParameter("searchText");  // 무엇을 검색?
+
+  String pageNum = request.getParameter("pageNum");
+  if (pageNum == null) {
+  	pageNum = "1"; //문자열
+  }
+
+  int currentPage = Integer.parseInt(pageNum);//문자열 인트형으로
+  int startRow = (currentPage - 1) * pageSize + 1; //시작행
+  int endRow = currentPage * pageSize; //끝행
+
+  int count = 0;
+  int number = 0;
+  List<BoardVO> articleList = null;
+
+  BoardDAO dbPro = BoardDAO.getInstance();
+
+/*   // 전체글 가져오기
+  count = dbPro.getArticleCount();
+
+  if (count > 0) {//글이 있을 때
+  	//articleList = dbPro.getArticles();
+  	articleList = dbPro.getArticles(startRow, endRow); //글을 가져다가 리스트에 저장한다
+  } //*** 검색일때와 아닐때 두가지로 if문 만듬
+  //number = count; 	//브라우저에 number출력		
+  number = count - (currentPage - 1) * pageSize; */
+  
+  if (searchText != null) {
+      // 검색 조건이 있을 경우
+      count = dbPro.getArticleCount(searchWhat, searchText);
+      if (count > 0) {
+          articleList = dbPro.getArticles(startRow, endRow, searchWhat, searchText);
+      }
+  } else {
+      // 검색이 아닐 경우
+      count = dbPro.getArticleCount();
+      if (count > 0) {
+          articleList = dbPro.getArticles(startRow, endRow);
+      }
+  }
+
+  number = count - (currentPage - 1) * pageSize;
+  
+  
+  
+  
+  %>
  
 <!DOCTYPE html>
 <html>
@@ -126,8 +148,8 @@ if(count==0){  //글이 없을때
 
 <%} %>
 
-<%
-	if(count>0){ //있을때
+		<%
+ 	if(count>0){ //있을때
 		int pageBlock = 5;
 		int imsi = count % pageSize == 0 ? 0 : 1;
 		int pageCount = count / pageSize + imsi;
@@ -137,12 +159,16 @@ if(count==0){  //글이 없을때
 		//끝 페이지		
 		int endPage = startPage + pageBlock -1;
 		
-		if(startPage > pageBlock){
-	%>		
-	
-	<a href="list.jsp?pageNum=<%=startPage-pageBlock%>">[이전]</a>
-	
-	<%
+		if(endPage > pageCount) endPage=pageCount; //!!!!수정!!!!
+		
+		if(startPage > pageBlock){ 
+			
+			
+	%>
+
+		<a href="list.jsp?pageNum=<%=startPage-pageBlock%>">[이전]</a>
+
+		<%
 		} //end if문
 		for(int i = startPage ; i <= endPage && i <= pageCount ; i++){
 	%>
@@ -155,18 +181,19 @@ if(count==0){  //글이 없을때
 	<a href="list.jsp?pageNum=<%=startPage+pageBlock%>">[다음]</a>	
 
 <%
-	}	//end if문
-		
-	}
-
-
-
+	}	//end if문	
+}
 %>			
 
-
-
-
-
+<form action="list.jsp">
+	<select name="searchWhat">
+		<option value="writer"  <%= "writer".equals(searchWhat) ? "selected" : "" %>>작성자</option>
+		<option value="subject"  <%= "subject".equals(searchWhat) ? "selected" : "" %>>제목</option>
+		<option value="content"  <%= "content".equals(searchWhat) ? "selected" : "" %>>내용</option>
+	</select>
+		<input type="text" name="searchText" value="<%= searchText != null ? searchText : "" %>">
+		<input type="submit" value="검색">
+</form>
 
 
 

@@ -47,7 +47,7 @@ name="delForm" method="post" onsubmit="return deleteSave()">
 	
 	<tr height="30">
 	<td align="center" bgcolor="<%=value_c %>">
-		<input type="submit" value="글수정">	
+		<input type="submit" value="글삭제">	
 		<input type="button" value="글목록"
 		onclick="document.location.href='list.jsp?pageNum=<%=pageNum%>'">
 	</td>

@@ -113,7 +113,10 @@ public class BoardDAO {
 	 *    int getArticleCount()
 	 */
 
-	public int getArticleCount() {
+	/* ***과제***
+	 * 	검색한 내용이 몇개인지를 반환하는 메소드 매개변수(검색조건, 검색내용)
+	 */
+	public int getArticleCount() { //오버로딩할것***
 	
 		Connection con = null;
 		PreparedStatement pstmt = null;
@@ -153,7 +156,7 @@ public class BoardDAO {
 	
 	/*  데이터베이스에 있는 전체 글을 가져다가 리스트에 저장 
 	 */
-	public List<BoardVO> getArticles(int start, int end){
+	public List<BoardVO> getArticles(int start, int end){  //오버로딩할것***
 		
 		Connection con = null;
 		PreparedStatement pstmt = null;
@@ -467,9 +470,110 @@ public class BoardDAO {
 		
 	}
 	
+	/* ***과제***
+	 * 	검색한 내용이 몇개인지를 반환하는 메소드 매개변수(검색조건, 검색내용)
+	 */
+	public int getArticleCount(String what, String content) { //오버로딩할것***
 	
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;	
+		int x = 0;
+		
+		try {
+			con = ConnUtil.getConnection();
+			//String sql = "select count(*) from board";  //쿼리문이 바뀜
+			String sql = "select count(*) from board where "+what+"like '%"+content+"%'";//바인딩없음
+			
+			pstmt = con.prepareStatement(sql);
+			rs = pstmt.executeQuery();
+			if(rs.next()) {
+				x = rs.getInt(1);
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if(rs!=null)rs.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+			try {
+				if(pstmt!=null)pstmt.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+			try {
+				if(con	!=null)con.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+		}		
+		return x;
+	}
 	
-
+	public List<BoardVO> getArticles(int start, int end, String what, String content){  //오버로딩할것***
+		
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		List<BoardVO> articleList = null;
+		
+		try {
+			con = ConnUtil.getConnection();
+			
+			//String sql = "select * from board order by num desc"; 페이지나누기전쿼리문
+			String sql = "select * from (select rownum rnum, num, writer, email, "
+					+ "subject, pass, regdate, readcount, ref, step, depth, content, "
+					+ "ip from (select * from board where "+what+" like '%"+content+"%' order by ref desc, step asc)) "
+					+ "where rnum >=? and rnum <=?";	//바인딩으로 시작과 끝의미
+			
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, start);
+			pstmt.setInt(2, end);			
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) { //결과가 있다면
+				articleList = new ArrayList<BoardVO>(end - start + 1);
+				do {
+					BoardVO article = new BoardVO();
+					article.setNum(rs.getInt("num"));
+					article.setWriter(rs.getString("writer"));
+					article.setEmail(rs.getString("email"));
+					article.setSubject(rs.getString("subject"));
+					article.setPass(rs.getString("pass"));
+					article.setRegdate(rs.getTimestamp("regdate"));
+					article.setReadcount(rs.getInt("readcount"));
+					article.setRef(rs.getInt("ref"));
+					article.setStep(rs.getInt("step"));
+					article.setDepth(rs.getInt("depth"));
+					article.setContent(rs.getString("content"));					
+					article.setIp(rs.getString("ip"));
+					
+					articleList.add(article);
+				}while(rs.next());
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if(rs!=null)rs.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+			try {
+				if(pstmt!=null)pstmt.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+			try {
+				if(con	!=null)con.close();
+			} catch (SQLException ss) {
+				ss.printStackTrace();
+			}
+		}
+		return articleList;		
+	}
 
 }
-

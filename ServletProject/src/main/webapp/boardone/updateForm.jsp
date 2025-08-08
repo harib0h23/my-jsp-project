@@ -25,7 +25,7 @@
 <body>
 <div align="center">
 <b>글 수정</b><br>
-<form action="updateProc.jsp" method="post" name="writeForm"
+<form action="updateProc.jsp?pageNum=<%=pageNum%>" method="post" name="writeForm"
 onsubmit="return writeSave()">
 
 <table width="400" border="1" cellpadding="0" cellspacing="0" 
