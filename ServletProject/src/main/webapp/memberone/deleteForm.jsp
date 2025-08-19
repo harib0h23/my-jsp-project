@@ -8,7 +8,7 @@
 <script type="text/javascript" src="script.js"></script>
 </head>
 <body onload="begin()">
-<form action="deleteProc.jsp" name=myForm onsubmit="return checkIt()">
+<form action="deleteProc.jsp" name=myForm onsubmit="return checkIt()" method="post">
 <table width="260" border="1" align="center">
 	<tr>
 		<td colspan="2" align="center">

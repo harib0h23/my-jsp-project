@@ -18,7 +18,7 @@
 <head>
 <meta charset="UTF-8">
 <title>회원정보 수정</title>
-<meta http-equiv="refresh" content="5;url=login.jsp">
+<meta http-equiv="refresh" content="5;url=member.mdo?cmd=login">
 </head>
 <body>
 <div align="center">

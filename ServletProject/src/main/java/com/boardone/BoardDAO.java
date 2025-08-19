@@ -4,17 +4,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
+
 
 public class BoardDAO {
 	
 	private static BoardDAO instance = null;
 	
-	private BoardDAO() {	}
+	public BoardDAO() { }
 
 	public static BoardDAO getInstance() {
 		
-		if(instance ==null) {
+		if(instance == null) {
 			synchronized (BoardDAO.class) {
 				instance = new BoardDAO();
 			}
@@ -22,18 +25,20 @@ public class BoardDAO {
 		return instance;
 	}
 	
-	// . . . 여기서부터 게시판에 작업할 기능을 하나씩 메소드로 구현하여 추가하면 됨.
-	
-	/*  실제 데이터베이스에 데이터를 저장할 메소드를 구현
+	//여기서부터 게시판에 작업할 기능을 하나씩 메소드로 구현하여 추가하면 됨
+
+	/* 실제 데이터베이스에 데이터를 저장할 메소드를 구현
+	 * 
 	 * 		insertArticle(BoardVO article)
+	 * 		
 	 */
 	
 	public void insertArticle(BoardVO article) {
-			
+		
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		//답변글일때
+		
 		int num = article.getNum();
 		int ref = article.getRef();
 		int step = article.getStep();
@@ -44,87 +49,73 @@ public class BoardDAO {
 		String sql = "";
 		
 		try {
+			
 			con = ConnUtil.getConnection();
 			pstmt = con.prepareStatement("select max(num) from board");
 			rs = pstmt.executeQuery();
 			
-			if(rs.next()) number = rs.getInt(1)+1; // 새글일 때
-			else number = 1; // 데이터가 없음
+			if(rs.next()) number = rs.getInt(1)+1;
+			else				number = 1;
 			
-			//답변글(댓글)일때
-			if(num !=0) {
-				sql = "update board set step = step+1 where ref = ? and step > ?";
+			if(num != 0) { //답변글 (댓글일 경우)
+				
+				sql = "update board set step=step+1 where ref=? and step > ?";
 				pstmt = con.prepareStatement(sql);
 				pstmt.setInt(1, ref);
 				pstmt.setInt(2, step);
 				pstmt.executeUpdate();
-				step = step + 1 ;
-				depth = depth + 1;				
+				step = step + 1;
+				depth = depth + 1;
 			}else {
 				ref = number;
 				step = 0;
 				depth = 0;
 			}
 			
-			sql = "insert into board(num, writer, email, subject, pass, regdate, "
-					+ "ref, step, depth, content, ip) values(board_seq.nextval, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			sql = "insert into board(num, writer, email, subject, pass, "
+					+ "regdate, ref, step, depth, content, ip) "
+					+ "values(board_seq.nextval,?,?,?,?,?,?,?,?,?,?)";
+			
 			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, article.getWriter());
-			pstmt.setString(2, article.getEmail());
+			pstmt.setString(1,  article.getWriter());
+			pstmt.setString(2,  article.getEmail());
 			pstmt.setString(3, article.getSubject());
-			pstmt.setString(4, article.getPass());
-			pstmt.setTimestamp(5, article.getRegdate());
+			pstmt.setString(4,  article.getPass());
+			pstmt.setTimestamp(5,  article.getRegdate());
 			pstmt.setInt(6, ref);
-			pstmt.setInt(7, step);
-			pstmt.setInt(8, depth);
+			pstmt.setInt(7,  step);
+			pstmt.setInt(8,  depth);
 			pstmt.setString(9, article.getContent());
-			pstmt.setString(10, article.getIp());
-			
+			pstmt.setString(10,  article.getIp());
 			pstmt.executeUpdate();
-			
-		}catch(Exception e) {
+	
+		}catch(Exception e) { 
 			e.printStackTrace();
-
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
 		}
 		
-	}//insertArticle end
-
-	/*
-	 * 글 목록 화면 만들기
-	 * 
-	 *    전체 글의 개수를 가져올 메소드를 구현함
-	 *    int getArticleCount()
-	 */
-
-	/* ***과제***
-	 * 	검색한 내용이 몇개인지를 반환하는 메소드 매개변수(검색조건, 검색내용)
-	 */
-	public int getArticleCount() { //오버로딩할것***
+	}// end insertArticle
 	
+	
+	/*		글 목록 화면 만들기
+	 * 		전체 글의 개수를 가져올 메소드를 구현함
+	 * 		int getArticleCount() 
+	 */
+	public int getArticleCount() {
+		
 		Connection con = null;
 		PreparedStatement pstmt = null;
-		ResultSet rs = null;	
+		ResultSet rs = null;
+		
 		int x = 0;
 		
 		try {
+			
 			con = ConnUtil.getConnection();
+			
 			String sql = "select count(*) from board";
 			pstmt = con.prepareStatement(sql);
 			rs = pstmt.executeQuery();
@@ -132,31 +123,20 @@ public class BoardDAO {
 				x = rs.getInt(1);
 			}
 			
-		}catch(Exception e) {
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-		}		
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+		}
 		return x;
 	}
 	
-	/*  데이터베이스에 있는 전체 글을 가져다가 리스트에 저장 
+	/*		데이터베이스에 있는 전체 글을 가져다가 리스트에 저장함
 	 */
-	public List<BoardVO> getArticles(int start, int end){  //오버로딩할것***
+	
+	public List<BoardVO> getArticles(int start, int end){
 		
 		Connection con = null;
 		PreparedStatement pstmt = null;
@@ -164,21 +144,23 @@ public class BoardDAO {
 		List<BoardVO> articleList = null;
 		
 		try {
+			
 			con = ConnUtil.getConnection();
 			
-			//String sql = "select * from board order by num desc"; 페이지나누기전쿼리문
+			//String sql = "select * from board order by num desc";
 			String sql = "select * from (select rownum rnum, num, writer, email, "
 					+ "subject, pass, regdate, readcount, ref, step, depth, content, "
 					+ "ip from (select * from board order by ref desc, step asc)) "
-					+ "where rnum >=? and rnum <=?";	//바인딩으로 시작과 끝의미
+					+ "where rnum >=? and rnum <=?";
 			
 			pstmt = con.prepareStatement(sql);
 			pstmt.setInt(1, start);
-			pstmt.setInt(2, end);			
+			pstmt.setInt(2, end);
 			rs = pstmt.executeQuery();
 			
-			if(rs.next()) { //결과가 있다면
+			if(rs.next()) {
 				articleList = new ArrayList<BoardVO>(end - start + 1);
+				
 				do {
 					BoardVO article = new BoardVO();
 					article.setNum(rs.getInt("num"));
@@ -186,46 +168,35 @@ public class BoardDAO {
 					article.setEmail(rs.getString("email"));
 					article.setSubject(rs.getString("subject"));
 					article.setPass(rs.getString("pass"));
-					article.setRegdate(rs.getTimestamp("regdate"));
 					article.setReadcount(rs.getInt("readcount"));
 					article.setRef(rs.getInt("ref"));
 					article.setStep(rs.getInt("step"));
 					article.setDepth(rs.getInt("depth"));
-					article.setContent(rs.getString("content"));					
+					article.setRegdate(rs.getTimestamp("regdate"));
+					article.setContent(rs.getString("content"));
 					article.setIp(rs.getString("ip"));
 					
 					articleList.add(article);
+					
 				}while(rs.next());
-			}
-		}catch(Exception e) {
+				
+			}	
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
 		}
-		return articleList;		
+		return articleList;
 	}
 	
-	/*
-	 *  글 내용 보기
-	 *  
-	 *    글의 번호를 매개변수로 해서 하나의 글에 대한 상세정보를 
-	 *    데이터베이스에서 기져온다 getArticle
+	/*		글 내용 보기
+	 * 
+	 * 		글의 번호를 매개변수로 해서 하나의 글에 대한 상세정보를 데이터베이스에서 가져옴
+	 * 	
 	 */
-
+	
 	public BoardVO getArticle(int num) {
 		
 		Connection con = null;
@@ -234,145 +205,121 @@ public class BoardDAO {
 		BoardVO article = null;
 		
 		try {
+			
 			con = ConnUtil.getConnection();
-			String sql1 = "update board set readcount=readcount+1 where num=?"; //조회수
+			String sql1 = "update board set readcount=readcount+1 where num=?";
 			pstmt = con.prepareStatement(sql1);
 			pstmt.setInt(1, num);
 			pstmt.executeUpdate();
 			
-			String sql2 = "select * from board where num=?"; //번호에 해당하는 글을 가져옴
+			String sql2 = "select * from board where num=?";
 			pstmt = con.prepareStatement(sql2);
 			pstmt.setInt(1, num);
 			rs = pstmt.executeQuery();
-			//실행후 rs에 저장
+			
 			if(rs.next()) {
-				//데이터베이스 정보를 가저다 vo에 저장을 함
 				article = new BoardVO();
 				article.setNum(rs.getInt("num"));
 				article.setWriter(rs.getString("writer"));
 				article.setEmail(rs.getString("email"));
 				article.setSubject(rs.getString("subject"));
 				article.setPass(rs.getString("pass"));
-				article.setRegdate(rs.getTimestamp("regdate"));
 				article.setReadcount(rs.getInt("readcount"));
 				article.setRef(rs.getInt("ref"));
 				article.setStep(rs.getInt("step"));
 				article.setDepth(rs.getInt("depth"));
-				article.setContent(rs.getString("content"));					
+				article.setRegdate(rs.getTimestamp("regdate"));
+				article.setContent(rs.getString("content"));
 				article.setIp(rs.getString("ip"));
 			}
-		}catch(Exception e) {
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
 		}
 		
 		return article;
-		
-	}// end getArticle
+
+	}
 	
 	/*
-	 *   글 수정시에는 글목록보기와 다르게 조회수를 증가시킬 필요가 없당
-	 *   조회수를 증가시키는 부분을 제외하고 num에 해당하는 게시글만 가져오는 
-	 *   메소드를 구현한다.
+	 *  글 수정 시에는 글 목록보기와 다르게 조회수를 증가시킬 필요가 없다.
+	 * 	 조회수를 증가시키는 부분을 제외하고 num에 해당하는 게시글만 가져오는 메소드를 구현
 	 */
 	
 	public BoardVO updateGetArticle(int num) {
-		// 수정할 글을 가져옴(위메소드와 동일,조회수는 불요) - form.jsp에서 가져와 수정	 - db수정	
+		
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		BoardVO article = null;
 		
 		try {
-			con = ConnUtil.getConnection();			
-			String sql = "select * from board where num=?"; //번호에 해당하는 글을 가져옴
+			
+			con = ConnUtil.getConnection();
+			
+			String sql = "select * from board where num=?";
 			pstmt = con.prepareStatement(sql);
 			pstmt.setInt(1, num);
 			rs = pstmt.executeQuery();
-			//실행후 rs에 저장
+			
 			if(rs.next()) {
-				//데이터베이스 정보를 가저다 vo에 저장을 함
 				article = new BoardVO();
 				article.setNum(rs.getInt("num"));
 				article.setWriter(rs.getString("writer"));
 				article.setEmail(rs.getString("email"));
 				article.setSubject(rs.getString("subject"));
 				article.setPass(rs.getString("pass"));
-				article.setRegdate(rs.getTimestamp("regdate"));
 				article.setReadcount(rs.getInt("readcount"));
 				article.setRef(rs.getInt("ref"));
 				article.setStep(rs.getInt("step"));
 				article.setDepth(rs.getInt("depth"));
-				article.setContent(rs.getString("content"));					
+				article.setRegdate(rs.getTimestamp("regdate"));
+				article.setContent(rs.getString("content"));
 				article.setIp(rs.getString("ip"));
 			}
-		}catch(Exception e) {
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-		}		
-		return article;		
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+		}
+		
+		return article;
+		
 	}
 	
-	/*
-	 *   updateForm.jsp에서 비밀번호를 입력하고 글 수정 버튼을 클릭하면
-	 *   데이터베이스에서 실제 글이 수정되어야 한다.
-	 *   
-	 *   수정이 성공하면1, 실패하면 0, -1은 글이 없음
+	
+	/* 	updateForm.jsp 에서 비밀번호를 입력하고 글 수정 버튼을 클릭하면
+	 * 		데이터베이스에서 실제 글이 수정 되어야한다. 
+	 * 
 	 */
 	
 	public int updateArticle(BoardVO article) {
 		
 		Connection con = null;
-		PreparedStatement pstmt= null;
+		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		String dbpasswd="";
-		String sql="";
+		
+		String dbpasswd = "";
+		String sql = "";
 		int result = -1;
 		
 		try {
-			con = ConnUtil.getConnection();			
-			pstmt = con.prepareStatement("select pass from board where num=?"); //비밀번호 검색함
+			
+			con = ConnUtil.getConnection();
+			pstmt = con.prepareStatement("select pass from board where num=?");
 			pstmt.setInt(1, article.getNum());
 			rs = pstmt.executeQuery();
-			//실행후 rs에 저장
+			
 			if(rs.next()) {
-				//데이터베이스 정보를 가저다 vo에 저장을 함
-				dbpasswd=rs.getString("pass");
+				dbpasswd = rs.getString("pass");
 				if(dbpasswd.equals(article.getPass())) {
-					// 데이터베이스에 저장된 pass와 입력받은 비밀번호가 일치하면 글 수정 처리
-					//글번호에 해당하는 , 바인딩으로 처리(이름,이베일,제목,내용)
-					sql="update board set writer=?, email=?, subject=?, content=? "
-							+ "where num=?";
+					//데이터베이스에 저장된 비밀번호와 내가 입력한 비밀번호가 일치하면 글 수정 처리.\
+					sql="update board set writer=?, email=?, subject=?, content=? where num=?";
 					pstmt = con.prepareStatement(sql);
 					pstmt.setString(1, article.getWriter());
 					pstmt.setString(2, article.getEmail());
@@ -380,140 +327,100 @@ public class BoardDAO {
 					pstmt.setString(4, article.getContent());
 					pstmt.setInt(5, article.getNum());
 					pstmt.executeUpdate();
-					result = 1;  //글 수정 성공
-					
+					result = 1;
 				}else {
-					result=0; //글 수정 실패
+					result = 0;
 				}
 			}
-		}catch(Exception e) {
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-		}	
-		
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+		}
 		
 		return result;
-	}  // updateArticle end
-	
-	/*
-	 *  글 삭제 버튼을 클릭하여 글 삭제 화면이 나오면 비밀번호를 입력하고 삭제처리한다.
-	 *  이 때, 데이터베이스에서 비밀번호를 비교하여 일치하면 글삭제처리를 실행한다.
-	 */
-	
-	public int deleteArticle(int num, String pass) { // 글번호와 비밀번호
-		Connection con = null;
-		PreparedStatement pstmt= null;
-		ResultSet rs = null;
-		String dbpasswd="";
-		String sql="";
-		int result = -1;
-		
-		try {
-			con = ConnUtil.getConnection();			
-			pstmt = con.prepareStatement("select pass from board where num=?"); //비밀번호 검색함
-			pstmt.setInt(1, num); //매개변수로 가져온 글번호
-			rs = pstmt.executeQuery();
-			//실행후 rs에 저장
-			if(rs.next()) {
-				//데이터베이스 정보를 가저다 vo에 저장을 함
-				dbpasswd=rs.getString("pass");
-				if(dbpasswd.equals(pass)) { // 입력받은 비밀번호와 비교
-					// 데이터베이스에 저장된 pass와 입력받은 비밀번호가 일치하면 글 삭제 처리
-					sql="delete from board where num=?";
-					pstmt = con.prepareStatement(sql);
-					pstmt.setInt(1, num); //매개변수로 가져온 글번호
-					pstmt.executeUpdate();
-					result = 1;  //글 삭제 성공
-					
-				}else {
-					result=0; //글 삭제 실패
-				}
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-		}	
-		
-		
-		return result;
-		
 		
 	}
 	
-	/* ***과제***
-	 * 	검색한 내용이 몇개인지를 반환하는 메소드 매개변수(검색조건, 검색내용)
-	 */
-	public int getArticleCount(String what, String content) { //오버로딩할것***
 	
+	public int deleteArticle(int num, String pass) {
+		
 		Connection con = null;
 		PreparedStatement pstmt = null;
-		ResultSet rs = null;	
+		ResultSet rs = null;
+		
+		String dbpasswd = "";
+		String sql = "";
+		int result = -1;
+		
+		try {
+			
+			con = ConnUtil.getConnection();
+			pstmt = con.prepareStatement("select pass from board where num=?");
+			pstmt.setInt(1, num);
+			rs = pstmt.executeQuery();
+			
+			if(rs.next()) {
+				dbpasswd = rs.getString("pass");
+				if(dbpasswd.equals(pass)) {
+					sql="delete from board where num=?";
+					pstmt = con.prepareStatement(sql);
+					pstmt.setInt(1, num);
+					pstmt.executeUpdate();
+					result = 1;
+				}else {
+					result = 0;
+				}
+			}
+		}catch(Exception e) { 
+			e.printStackTrace();
+		}finally {
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+		}
+		
+		return result;
+		
+	}
+	
+// 검색한 내용이 몇개인지를 반환하는 메소드(검색조건, 검색내용)	
+public int getArticleCount(String what, String content) {
+		
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		
 		int x = 0;
 		
 		try {
-			con = ConnUtil.getConnection();
-			//String sql = "select count(*) from board";  //쿼리문이 바뀜
-			String sql = "select count(*) from board where "+what+"like '%"+content+"%'";//바인딩없음
 			
+			con = ConnUtil.getConnection();
+			
+			//String sql = "select count(*) from board";
+			String sql = "select count(*) from board where "+what+" like '%"+content+"%'";
 			pstmt = con.prepareStatement(sql);
 			rs = pstmt.executeQuery();
 			if(rs.next()) {
 				x = rs.getInt(1);
 			}
 			
-		}catch(Exception e) {
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-		}		
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+		}
 		return x;
 	}
 	
-	public List<BoardVO> getArticles(int start, int end, String what, String content){  //오버로딩할것***
+	/*		데이터베이스에 있는 전체 글을 가져다가 리스트에 저장함
+	 */
+	
+	public List<BoardVO> getArticles(String what, String content, int start, int end){
 		
 		Connection con = null;
 		PreparedStatement pstmt = null;
@@ -521,21 +428,24 @@ public class BoardDAO {
 		List<BoardVO> articleList = null;
 		
 		try {
+			
 			con = ConnUtil.getConnection();
 			
-			//String sql = "select * from board order by num desc"; 페이지나누기전쿼리문
+			//String sql = "select * from board order by num desc";
 			String sql = "select * from (select rownum rnum, num, writer, email, "
 					+ "subject, pass, regdate, readcount, ref, step, depth, content, "
-					+ "ip from (select * from board where "+what+" like '%"+content+"%' order by ref desc, step asc)) "
-					+ "where rnum >=? and rnum <=?";	//바인딩으로 시작과 끝의미
+					+ "ip from (select * from board where "
+					+what+" like '%"+content+"%' order by ref desc, step asc)) "
+					+ "where rnum >=? and rnum <=?";
 			
 			pstmt = con.prepareStatement(sql);
 			pstmt.setInt(1, start);
-			pstmt.setInt(2, end);			
+			pstmt.setInt(2, end);
 			rs = pstmt.executeQuery();
 			
-			if(rs.next()) { //결과가 있다면
+			if(rs.next()) {
 				articleList = new ArrayList<BoardVO>(end - start + 1);
+				
 				do {
 					BoardVO article = new BoardVO();
 					article.setNum(rs.getInt("num"));
@@ -543,37 +453,29 @@ public class BoardDAO {
 					article.setEmail(rs.getString("email"));
 					article.setSubject(rs.getString("subject"));
 					article.setPass(rs.getString("pass"));
-					article.setRegdate(rs.getTimestamp("regdate"));
 					article.setReadcount(rs.getInt("readcount"));
 					article.setRef(rs.getInt("ref"));
 					article.setStep(rs.getInt("step"));
 					article.setDepth(rs.getInt("depth"));
-					article.setContent(rs.getString("content"));					
+					article.setRegdate(rs.getTimestamp("regdate"));
+					article.setContent(rs.getString("content"));
 					article.setIp(rs.getString("ip"));
 					
 					articleList.add(article);
+					
 				}while(rs.next());
-			}
-		}catch(Exception e) {
+				
+			}	
+		}catch(Exception e) { 
 			e.printStackTrace();
 		}finally {
-			try {
-				if(rs!=null)rs.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(pstmt!=null)pstmt.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
-			try {
-				if(con	!=null)con.close();
-			} catch (SQLException ss) {
-				ss.printStackTrace();
-			}
+			try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+			try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
 		}
-		return articleList;		
+		return articleList;
 	}
-
+	
+	
+	
 }
