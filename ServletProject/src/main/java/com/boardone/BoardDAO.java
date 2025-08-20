@@ -386,7 +386,7 @@ public class BoardDAO {
 		
 	}
 	
-// 검색한 내용이 몇개인지를 반환하는 메소드(검색조건, 검색내용)	
+// 검색한 내용이 몇개인지를 반환하는 메소드(검색조건, 검색내용)	**복사 model.dao
 public int getArticleCount(String what, String content) {
 		
 		Connection con = null;

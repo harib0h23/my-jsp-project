@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+
+
 public class BoardDAO {
 
 	private static BoardDAO instance = null;
@@ -385,8 +387,98 @@ public class BoardDAO {
 			return result;
 			
 		}
-	
-	
+		
+		
+		// 검색한 내용이 몇개인지를 반환하는 메소드(검색조건, 검색내용)	**복사 model.dao
+
+		public int getArticleCount(String what, String content) {
+			
+			Connection con = null;
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			
+			int x = 0;
+			
+			try {
+				
+				con = ConnUtil.getConnection();
+				
+				//String sql = "select count(*) from board";
+				String sql = "select count(*) from board where "+what+" like '%"+content+"%'";
+				pstmt = con.prepareStatement(sql);
+				rs = pstmt.executeQuery();
+				if(rs.next()) {
+					x = rs.getInt(1);
+				}
+				
+			}catch(Exception e) { 
+				e.printStackTrace();
+			}finally {
+				try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+				try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+				try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+			}
+			return x;
+		}
+		
+		/*		데이터베이스에 있는 전체 글을 가져다가 리스트에 저장함
+		 */
+		
+		public List<BoardVO> getArticles(String what, String content, int start, int end){
+			
+			Connection con = null;
+			PreparedStatement pstmt = null;
+			ResultSet rs = null;
+			List<BoardVO> articleList = null;
+			
+			try {
+				
+				con = ConnUtil.getConnection();
+				
+				//String sql = "select * from board order by num desc";
+				String sql = "select * from (select rownum rnum, num, writer, email, "
+						+ "subject, pass, regdate, readcount, ref, step, depth, content, "
+						+ "ip from (select * from board where "
+						+what+" like '%"+content+"%' order by ref desc, step asc)) "
+						+ "where rnum >=? and rnum <=?";
+				
+				pstmt = con.prepareStatement(sql);
+				pstmt.setInt(1, start);
+				pstmt.setInt(2, end);
+				rs = pstmt.executeQuery();
+				
+				if(rs.next()) {
+					articleList = new ArrayList<BoardVO>(end - start + 1);
+					
+					do {
+						BoardVO article = new BoardVO();
+						article.setNum(rs.getInt("num"));
+						article.setWriter(rs.getString("writer"));
+						article.setEmail(rs.getString("email"));
+						article.setSubject(rs.getString("subject"));
+						article.setPass(rs.getString("pass"));
+						article.setReadcount(rs.getInt("readcount"));
+						article.setRef(rs.getInt("ref"));
+						article.setStep(rs.getInt("step"));
+						article.setDepth(rs.getInt("depth"));
+						article.setRegdate(rs.getTimestamp("regdate"));
+						article.setContent(rs.getString("content"));
+						article.setIp(rs.getString("ip"));
+						
+						articleList.add(article);
+						
+					}while(rs.next());
+					
+				}	
+			}catch(Exception e) { 
+				e.printStackTrace();
+			}finally {
+				try { if (rs != null) rs.close(); } catch (SQLException e) { e.printStackTrace(); }
+				try { if (pstmt != null) pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+				try { if (con != null) con.close(); } catch (SQLException e) { e.printStackTrace(); }
+			}
+			return articleList;
+		}
 	
 	
 	

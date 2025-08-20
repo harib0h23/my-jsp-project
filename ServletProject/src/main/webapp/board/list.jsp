@@ -110,7 +110,7 @@
 
 </c:if>
 
-<!-- 
+<!-- **과제**
 <form action="list.jsp">
        <select name="searchWhat">
               <option value="writer">작성자</option>
